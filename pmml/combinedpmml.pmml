@@ -1,0 +1,99 @@
+<MiningModel functionName="regression">
+  <MiningSchema>
+    <MiningField name="A" usageType="active"/>
+    <MiningField name="B" usageType="active"/>
+    <MiningField name="C" usageType="active"/>
+    <MiningField name="E" usageType="active"/>
+    <MiningField name="CombinedRate" usageType="target"/>
+    <MiningField name="D" usageType="active"/>
+    <MiningField name="flag" usageType="target"/>
+    <MiningField name="F" usageType="active"/>
+    <MiningField name="G" usageType="active"/>
+  </MiningSchema>
+  <Segmentation multipleModelMethod="modelChain">
+    <Segment id="1">
+      <True/>
+     <GeneralRegressionModel modelType="generalizedLinear" functionName="classification" 
+      linkFunction="logit" distribution="binomial">
+     <MiningSchema>
+      <MiningField name="flag" usageType="target"/>
+      <MiningField name="A"/>
+      <MiningField name="B"/>
+      <MiningField name="C"/>
+      <MiningField name="D"/>
+      <MiningField name="E"/>
+    </MiningSchema>
+    <Output>
+      <OutputField name="Index" optype="continuous" dataType="double" 
+     feature="probability" value="1"/>
+    </Output>
+  ......
+  <ParamMatrix>
+      <PCell targetCategory="1" parameterName="p0" beta="x0"/>
+      <PCell targetCategory="1" parameterName="p1" beta="x1"/>
+      <PCell targetCategory="1" parameterName="p2" beta="x2"/>
+      <PCell targetCategory="1" parameterName="p3" beta="x3"/>
+      <PCell targetCategory="1" parameterName="p4" beta="x4"/>
+      <PCell targetCategory="1" parameterName="p5" beta="x5"/>
+    </ParamMatrix>
+  </GeneralRegressionModel>
+   </Segment>
+    <Segment id="2">
+      <True/>
+      <MiningModel modelName="Probability2" functionName="regression">
+        <MiningSchema>
+           <MiningField name="CombinedRate" usageType="target"/> 
+           <MiningField name="Index" usageType="active"/>          
+           <MiningField name="F" usageType="active"/>
+           <MiningField name="G" usageType="active"/>
+        </MiningSchema>
+        <Output>
+          <OutputField dataType="double" feature="predictedValue" name="CombinedRate" 
+      optype="continuous"/>
+        </Output>
+        <Segmentation multipleModelMethod="selectFirst">
+       <Segment id="2.1">
+      <CompoundPredicate booleanOperator="and">
+      <SimplePredicate field="F" operator="greaterOrEqual" value="2"/>
+      <SimplePredicate field="G" operator="greaterOrEqual" value="10"/>
+      </CompoundPredicate>
+        <RegressionModel modelName="CombinedRate1" functionName="regression">
+        <MiningSchema>
+          <MiningField name="Index" usageType="active"/>
+          <MiningField name="F" usageType="active"/>
+          <MiningField name="CombinedRate" usageType="target"/>
+           </MiningSchema>
+        <Output>
+          <OutputField dataType="double" feature="predictedValue" name="CombinedRate" optype="continuous"/>
+        </Output>
+        <RegressionTable targetCategory="no" intercept="1">
+          <NumericPredictor coefficient="0" exponent="1" name="Index"/>
+          <NumericPredictor coefficient="0" exponent="1" name="F"/>
+          </RegressionTable>
+      </RegressionModel>
+    </Segment>
+    <Segment id="2.2">
+      <CompoundPredicate booleanOperator="or">
+        <SimplePredicate field="F" operator="lessThan" value="2"/>
+        <SimplePredicate field="G" operator="lessThan" value="10"/>
+      </CompoundPredicate>
+      <RegressionModel modelName="CombinedRate2" functionName="regression">
+        <MiningSchema>
+          <MiningField name="Index" usageType="active"/>
+          <MiningField name="F" usageType="active"/>
+          <MiningField name="CombinedRate" usageType="target"/>
+        </MiningSchema>
+        <Output>
+          <OutputField dataType="double" feature="predictedValue" name="CombinedRate" optype="continuous"/>
+        </Output>
+        <RegressionTable targetCategory="no" intercept="0">
+          <NumericPredictor coefficient="0.5" exponent="1" name="Index"/>
+          <NumericPredictor coefficient="0.5" exponent="1" name="F"/>
+        </RegressionTable>
+      </RegressionModel>
+      </Segment>
+     </Segmentation>
+   </MiningModel>
+   </Segment>
+   </Segmentation>
+</MiningModel>
